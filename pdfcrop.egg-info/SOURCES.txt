@@ -1,0 +1,7 @@
+README.md
+setup.py
+bin/pdfcrop
+pdfcrop.egg-info/PKG-INFO
+pdfcrop.egg-info/SOURCES.txt
+pdfcrop.egg-info/dependency_links.txt
+pdfcrop.egg-info/top_level.txt

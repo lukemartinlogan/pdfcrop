@@ -1,0 +1,7 @@
+README.md
+setup.py
+bin/pdfcrop
+luxio.egg-info/PKG-INFO
+luxio.egg-info/SOURCES.txt
+luxio.egg-info/dependency_links.txt
+luxio.egg-info/top_level.txt
