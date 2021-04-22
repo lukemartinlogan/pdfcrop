@@ -19,16 +19,13 @@ else:
     sys.exit(1)
 
 #Get BBOX of PDF
-bbox_text = str(subprocess.check_output(f"gs -dSAFER -dNOPAUSE -dBATCH -sDEVICE=bbox {infile}", shell=True, stderr=subprocess.STDOUT))
-bbox = re.search("%%HiResBoundingBox: ([0-9.]+) ([0-9.]+) ([0-9.]+) ([0-9.]+)", bbox_text)
+bbox_text = str(subprocess.check_output(f"gs -dSAFER -dNOPAUSE -dBATCH -sDEVICE=bbox {infile}", shell=True, stderr=subprocess.STDOUT, encoding='UTF-8'))
+bbox = re.search("%%HiResBoundingBox: ([\-0-9.]+) ([\-0-9.]+) ([\-0-9.]+) ([\-0-9.]+)", bbox_text)
 xmin = float(bbox.group(1))
 ymin = float(bbox.group(2))
 xmax = float(bbox.group(3))
 ymax = float(bbox.group(4))
 
 #Crop the PDF
-os.system(f"gs \
-  -o {outfile} \
-  -sDEVICE=pdfwrite \
-  -c \"[/CropBox [{xmin} {ymin} {xmax} {ymax}] /PAGES pdfmark\" \
-  -f {infile}")
+print(f"gs -o {outfile} -sDEVICE=pdfwrite -c \"[/CropBox [{xmin} {ymin} {xmax} {ymax}] /PAGES pdfmark\" -f {infile}")
+os.system(f"gs -o {outfile} -sDEVICE=pdfwrite -c \"[/CropBox [{xmin} {ymin} {xmax} {ymax}] /PAGES pdfmark\" -f {infile}")
