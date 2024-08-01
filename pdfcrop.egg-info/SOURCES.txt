@@ -2,6 +2,7 @@ LICENSE
 README.md
 setup.py
 bin/pdfcrop
+bin/rotate_pdf
 pdfcrop.egg-info/PKG-INFO
 pdfcrop.egg-info/SOURCES.txt
 pdfcrop.egg-info/dependency_links.txt
