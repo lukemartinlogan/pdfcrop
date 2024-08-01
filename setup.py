@@ -4,7 +4,7 @@ setuptools.setup(
     name="pdfcrop",
     #packages=setuptools.find_packages(where='src'),
     #package_dir = {'':'src'},
-    scripts=['bin/pdfcrop'],
+    scripts=['bin/pdfcrop', 'bin/rotate_pdf'],
     version="0.0.1",
     author="Luke Logan",
     author_email="llogan@hawk.iit.edu",

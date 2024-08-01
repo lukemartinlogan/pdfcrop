@@ -1,4 +1,4 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: pdfcrop
 Version: 0.0.1
 Summary: A simple tool to crop whitespace in pdfs
@@ -6,7 +6,6 @@ Home-page: https://github.com/lukemartinlogan/pdfcrop
 Author: Luke Logan
 Author-email: llogan@hawk.iit.edu
 License: UNKNOWN
-Description: UNKNOWN
 Platform: UNKNOWN
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3
@@ -17,3 +16,7 @@ Classifier: License :: None
 Classifier: Operating System :: OS Independent
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Office
+License-File: LICENSE
+
+UNKNOWN
+
