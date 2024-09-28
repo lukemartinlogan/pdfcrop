@@ -2,7 +2,6 @@
 
 import sys
 from pdfcrop.pdfcrop import PdfCrop
-import re
 
 if len(sys.argv) == 2:
     infile = sys.argv[1]
@@ -15,4 +14,4 @@ else:
     sys.exit(1)
 
 pdf = PdfCrop(infile, outfile)
-pdf.crop()
+pdf.to_svg()
