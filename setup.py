@@ -21,5 +21,17 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Office",
     ],
-    long_description=""
+    long_description="",
+    install_requires=[
+        'scikit-learn>=0.24.0',
+        'xgboost>=1.3.1',
+        'numpy>=1.19.1',
+        'pandas>=1.1.0',
+        'scipy>=1.5.3',
+        'pytest',
+        'PyPDF2',
+        'cairosvg',
+        'pdf2image',
+        'aspose-words'
+    ]
 )
