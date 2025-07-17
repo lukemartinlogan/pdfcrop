@@ -1,17 +1,253 @@
 #!/usr/bin/env python3
+"""
+PDF to SVG Cropper
 
+This script takes PDF files as input, crops the whitespace from each page,
+and saves the result as SVG files.
+
+Usage:
+    python pdf_to_svg_cropper.py file1.pdf file2.pdf file3.pdf ...
+
+Requirements:
+    pip install pymupdf
+
+Author: AI Assistant
+"""
+
+import argparse
 import sys
-from pdfcrop.pdfcrop import PdfCrop
+import os
+from pathlib import Path
+import fitz  # PyMuPDF
 
-if len(sys.argv) == 2:
-    infile = sys.argv[1]
-    outfile = None
-elif len(sys.argv) == 3:
-    infile = sys.argv[1]
-    outfile = sys.argv[2]
-else:
-    print("USAGE: pdfcrop.py [input.pdf] [output.pdf (opt)]")
-    sys.exit(1)
 
-pdf = PdfCrop(infile, outfile)
-pdf.to_svg()
+def get_content_bbox(page):
+    """
+    Get the bounding box of the actual content on a page (excluding whitespace).
+    
+    Args:
+        page: PyMuPDF page object
+        
+    Returns:
+        fitz.Rect: Bounding rectangle of the content
+    """
+    # Get all text blocks and drawings on the page
+    blocks = page.get_text("dict")["blocks"]
+    drawings = page.get_drawings()
+    
+    if not blocks and not drawings:
+        # If no content found, return the entire page
+        return page.rect
+    
+    # Initialize bounding box with extreme values
+    min_x = float('inf')
+    min_y = float('inf')
+    max_x = float('-inf')
+    max_y = float('-inf')
+    
+    # Process text blocks
+    for block in blocks:
+        if "lines" in block:  # Text block
+            bbox = fitz.Rect(block["bbox"])
+            min_x = min(min_x, bbox.x0)
+            min_y = min(min_y, bbox.y0)
+            max_x = max(max_x, bbox.x1)
+            max_y = max(max_y, bbox.y1)
+    
+    # Process drawings/graphics
+    for drawing in drawings:
+        if "rect" in drawing:
+            bbox = drawing["rect"]
+            min_x = min(min_x, bbox.x0)
+            min_y = min(min_y, bbox.y0)
+            max_x = max(max_x, bbox.x1)
+            max_y = max(max_y, bbox.y1)
+    
+    # If no valid content found, return the page rect
+    if min_x == float('inf'):
+        return page.rect
+    
+    # Add small margin (5 points) around content
+    margin = 5
+    content_rect = fitz.Rect(
+        max(0, min_x - margin),
+        max(0, min_y - margin),
+        min(page.rect.width, max_x + margin),
+        min(page.rect.height, max_y + margin)
+    )
+    
+    return content_rect
+
+
+def crop_pdf_to_svg(input_path, output_path=None):
+    """
+    Crop whitespace from a PDF and save as SVG.
+    
+    Args:
+        input_path (str): Path to input PDF file
+        output_path (str, optional): Path for output SVG file. 
+                                   If None, uses input filename with .svg extension
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Open the PDF
+        doc = fitz.open(input_path)
+        
+        # Generate output path if not provided
+        if output_path is None:
+            input_file = Path(input_path)
+            output_path = input_file.with_suffix('.svg')
+        
+        print(f"Processing: {input_path}")
+        print(f"Pages found: {len(doc)}")
+        
+        # If multiple pages, save each page as a separate SVG
+        if len(doc) > 1:
+            base_output = Path(output_path)
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                
+                # Get content bounding box
+                content_bbox = get_content_bbox(page)
+                
+                # Create a new page with cropped dimensions
+                cropped_doc = fitz.open()
+                cropped_page = cropped_doc.new_page(
+                    width=content_bbox.width,
+                    height=content_bbox.height
+                )
+                
+                # Copy content from original page to cropped page
+                cropped_page.show_pdf_page(
+                    fitz.Rect(0, 0, content_bbox.width, content_bbox.height),
+                    doc,
+                    page_num,
+                    clip=content_bbox
+                )
+                
+                # Generate output filename for this page
+                page_output = base_output.with_stem(f"{base_output.stem}_page_{page_num + 1}")
+                
+                # Save as SVG
+                svg_text = cropped_page.get_svg_image()
+                with open(page_output, 'w', encoding='utf-8') as f:
+                    f.write(svg_text)
+                
+                print(f"  Page {page_num + 1} saved as: {page_output}")
+                cropped_doc.close()
+        else:
+            # Single page document
+            page = doc[0]
+            
+            # Get content bounding box
+            content_bbox = get_content_bbox(page)
+            
+            # Create a new document with cropped dimensions
+            cropped_doc = fitz.open()
+            cropped_page = cropped_doc.new_page(
+                width=content_bbox.width,
+                height=content_bbox.height
+            )
+            
+            # Copy content from original page to cropped page
+            cropped_page.show_pdf_page(
+                fitz.Rect(0, 0, content_bbox.width, content_bbox.height),
+                doc,
+                0,
+                clip=content_bbox
+            )
+            
+            # Save as SVG
+            svg_text = cropped_page.get_svg_image()
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(svg_text)
+            
+            print(f"  Saved as: {output_path}")
+            cropped_doc.close()
+        
+        doc.close()
+        return True
+        
+    except Exception as e:
+        print(f"Error processing {input_path}: {str(e)}")
+        return False
+
+
+def main():
+    """Main function to handle command line arguments and process files."""
+    parser = argparse.ArgumentParser(
+        description="Crop whitespace from PDF files and save as SVG",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    python pdf_to_svg_cropper.py document.pdf
+    python pdf_to_svg_cropper.py file1.pdf file2.pdf file3.pdf
+    python pdf_to_svg_cropper.py *.pdf
+        """
+    )
+    
+    parser.add_argument(
+        'pdf_files',
+        nargs='+',
+        help='One or more PDF files to process'
+    )
+    
+    parser.add_argument(
+        '--output-dir',
+        '-o',
+        help='Output directory for SVG files (default: same as input file)'
+    )
+    
+    parser.add_argument(
+        '--verbose',
+        '-v',
+        action='store_true',
+        help='Enable verbose output'
+    )
+    
+    args = parser.parse_args()
+    
+    # Check if PyMuPDF is available
+    try:
+        import fitz
+    except ImportError:
+        print("Error: PyMuPDF is required. Install it with: pip install pymupdf")
+        sys.exit(1)
+    
+    # Process each PDF file
+    success_count = 0
+    total_count = len(args.pdf_files)
+    
+    for pdf_file in args.pdf_files:
+        # Check if file exists
+        if not os.path.isfile(pdf_file):
+            print(f"Warning: File not found: {pdf_file}")
+            continue
+        
+        # Check if it's a PDF file
+        if not pdf_file.lower().endswith('.pdf'):
+            print(f"Warning: Not a PDF file: {pdf_file}")
+            continue
+        
+        # Determine output path
+        output_path = None
+        if args.output_dir:
+            output_dir = Path(args.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            input_file = Path(pdf_file)
+            output_path = output_dir / f"{input_file.stem}.svg"
+        
+        # Process the file
+        if crop_pdf_to_svg(pdf_file, output_path):
+            success_count += 1
+    
+    print(f"\nProcessing complete: {success_count}/{total_count} files processed successfully.")
+    
+    if success_count < total_count:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main() 

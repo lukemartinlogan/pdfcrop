@@ -4,7 +4,7 @@ setuptools.setup(
     name="pdfcrop",
     #packages=setuptools.find_packages(where='src'),
     #package_dir = {'':'src'},
-    scripts=['bin/pdfcrop', 'bin/rotate_pdf', 'bin/pdf_to_svg'],
+    scripts=['bin/pdf_to_svg'],
     version="0.0.1",
     author="Luke Logan",
     author_email="llogan@hawk.iit.edu",
@@ -23,15 +23,6 @@ setuptools.setup(
     ],
     long_description="",
     install_requires=[
-        'scikit-learn>=0.24.0',
-        'xgboost>=1.3.1',
-        'numpy>=1.19.1',
-        'pandas>=1.1.0',
-        'scipy>=1.5.3',
-        'pytest',
-        'PyPDF2',
-        'cairosvg',
-        'pdf2image',
-        'aspose-words'
+        'pymupdf>=1.23.0 '
     ]
 )
